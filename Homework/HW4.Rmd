@@ -1,0 +1,346 @@
+# Packages
+```{r}
+library(tidyverse)
+library(MASS)
+library(neuralnet)
+```
+
+# Data loading and cleaning
+```{r}
+# Loading the data
+bank_df <- read.csv(data_path)
+
+# Checking the structure of the data
+str(bank_df)
+
+# Converting the CustomerID to a string
+bank_df$CustomerID <- as.character(bank_df$CustomerID)
+
+# Converting personal loan to a factor
+bank_df$PersonalLoan <- as.factor(bank_df$PersonalLoan)
+
+# Converting ZIP.Code to a string 
+bank_df$ZIP.Code <- as.factor(bank_df$ZIP.Code)
+
+# Converting Education to a factor
+bank_df$Education <- as.factor(bank_df$Education)
+
+# Converting SecuritiesAccount to a factor
+bank_df$SecuritiesAccount <- as.factor(bank_df$SecuritiesAccount)
+
+# Converting CDAccount to a factor
+bank_df$CDAccount <- as.factor(bank_df$CDAccount)
+
+# Converting Online to a factor
+bank_df$Online <- as.factor(bank_df$Online)
+
+# Converting CreditCard to a factor
+bank_df$CreditCard <- as.factor(bank_df$CreditCard)
+
+# Generating a summary of the data
+summary(bank_df)
+```
+
+# Questions
+```{r}
+# Removing CustomerID because it is not necessary for modeling
+modeling_df <- bank_df[, 2:14]
+
+# Also removing Zip.Code
+modeling_df$ZIP.Code <- NULL
+
+```
+
+## Question 1
+### Logit
+```{r}
+# Creating a logistic regression with all predictor variables
+logit_1 <- glm(PersonalLoan ~ ., family=binomial(logit), data=modeling_df)
+summary(logit_1) # AIC: 1198.3
+
+# -- Answers
+# The significant variables are: Income, Family, CCAvg, Education, SecuritiesAccount, CDAccount, Online and CreditCard
+
+# As Income increases by 1 unit, holding the other variables within the model constant, the probability that a customer accepts the loan increases by ~52%
+
+# As Family increases by 1 unit, holding the other variables within the model constant, the probability that a customer accepts the loan increases by ~65%
+
+# As CCAvg increases by 1 unit, holding the other variables within the model constant, the probability that a customer accepts the loan increases by ~54%
+
+# If a customer has Graduate level education, holding the other variables within the model constant, the probability that the customer accepts the loan is ~98% higher than a customer with Undergraduate level education
+
+# If a customer has Advanced/Professional level education, holding the other variables within the model constant, the probability that the customer accepts the loan is ~98% higher than a customer with Undergraduate level education
+
+# If a customer has a securities account, holding the other variables within the model constant, the probability that the customer accepts the loan is ~29% lower than a customer with no securities account
+
+# If a customer has a certificate deposit with the bank, holding the other variables within the model constant, the probability that the customer accepts the loan is ~98% higher than a customer with no certificate deposit with the bank
+
+# If a customer uses internet banking facilities, holding the other variables within the model constant, the probability that the customer accepts the loan is ~32% lower than a customer who does not use internet banking facilities
+
+# If a customer uses a credit card issued by the bank, holding the other variables within the model constant, the probability that the customer accepts the loan is ~26% lower than a customer who does not use a credit card issued by the bank
+  
+```
+
+### Probit
+```{r}
+# Creating a logistic regression with all predictor variables
+probit_1 <- glm(PersonalLoan ~ ., family=binomial(probit), data=modeling_df)
+summary(probit_1) # AIC: 1236.4
+
+# -- Answers
+# The significant variables are: Income, Family, CCAvg, Education, SecuritiesAccount, CDAccount, Online and CreditCard
+
+# As Income increases, the probability that a customer accepts the loan increases
+
+# As Family increases, the probability that a customer accepts the loan increases
+
+# As CCAvg increases, the probability that a customer accepts the loan increases
+
+# If a customer has Graduate level education, the probability that the customer accepts the loan is higher than a customer with Undergraduate level education
+
+# If a customer has Advanced/Professional level education, the probability that the customer accepts the loan ishigher than a customer with Undergraduate level education
+
+# If a customer has a securities account, the probability that the customer accepts the loan is lower than a customer with no securities account
+
+# If a customer has a certificate deposit with the bank, the probability that the customer accepts the loan is higher than a customer with no certificate deposit with the bank
+
+# If a customer uses internet banking facilities, the probability that the customer accepts the loan is lower than a customer who does not use internet banking facilities
+
+# If a customer uses a credit card issued by the bank, the probability that the customer accepts the loan is lower than a customer who does not use a credit card issued by the bank
+
+```
+
+## Question 2
+### Logit
+```{r}
+# Creating a logistic regression with all predictor variables
+logit_2 <- glm(PersonalLoan ~ (.)^2, family=binomial(logit), data=modeling_df)
+summary(logit_2) # AIC: 572.87
+
+# -- Answers
+# The significant variables are: Age:Family, Experience:Family, Experience:Education3, Income:Family, Income:CCAvg, Income:Education2, Income:Education3, Family:CCavg, Family:Education2, Family:Edcation3, Family:Mortgage, Family:SecuritiesAccount, Family:CDAccount, Family:Online, Family:CreditCard, CCAvg:Education2, CCAvg:Education3, Online:CreditCard
+   
+
+# As Age and Family increase, holding the other variables within the model constant, the probability that a customer accepts the loan decreases
+
+# As Experience and Family increase, holding the other variables within the model constant, the probability that a customer accepts the loan increases
+
+# If a customer has Advanced/Professional level education, as Experience increases, holding the other variables within the model constant, the probability that a customer accepts the loan increases and is higher than a customer with Undergraduate level education
+
+# As Income and Family increase, holding the other variables within the model constant, the probability that a customer accepts the loan increases
+
+# As Income and CCAvg increase, holding the other variables within the model constant, the probability that a customer accepts the loan increases
+
+# If a customer has Graduate level education, as Income increases, holding the other variables within the model constant, the probability that a customer accepts the loan decreases and is lower than a customer with Undergraduate level education
+
+# If a customer has Advanced/Professional level education, as Income increases, holding the other variables within the model constant, the probability that a customer accepts the loan increases and is higher than a customer with Undergraduate level education
+
+# As CCAvg and Family increase, holding the other variables within the model constant, the probability that a customer accepts the loan increases
+
+# If a customer has Graduate level education, as Family increases, holding the other variables within the model constant, the probability that a customer accepts the loan decreases and is lower than a customer with Undergraduate level education
+
+# If a customer has Advanced/Professional level education, as Family increases, holding the other variables within the model constant, the probability that a customer accepts the loan increases and is higher than a customer with Undergraduate level education
+
+# As Mortgage and Family increase, holding the other variables within the model constant, the probability that a customer accepts the loan increases
+
+# If a customer has a securities account, as Family increases, holding the other variables within the model constant, the probability that the customer accepts the loan decreases and is lower than a customer with no securities account
+
+# If a customer has a certificate deposit with the bank, as Family increases, holding the other variables within the model constant, the probability that the customer accepts the loan increases and is higher than a customer with no certificate deposit with the bank
+
+# If a customer uses a credit card issued by the bank, as Family increases, holding the other variables within the model constant, the probability that the customer accepts the loan decreases and is lower than a customer who does not use a credit card issued by the bank
+
+# If a customer has Graduate level education, as CCAvg increases, holding the other variables within the model constant, the probability that a customer accepts the loan increases and is higher than a customer with Undergraduate level education
+
+# If a customer has Advanced/Professional level education, as CCAvg increases, holding the other variables within the model constant, the probability that a customer accepts the loan increases and is higher than a customer with Undergraduate level education
+
+# If a customer uses internet banking facilities and uses a credit card issued by the bank, holding the other variables within the model constant, the probability that the customer accepts the loan decreases and is lower than a customer who neither uses internet banking facilities nor a credit card issued by the bank
+
+```
+
+## Question 3
+### Logit
+```{r}
+# Creating a logistic regression with only important variables
+logit_3_formula <- PersonalLoan ~ Age + Family + Experience + Income + CCAvg + Mortgage + Education + SecuritiesAccount + CDAccount + Online + CreditCard + Age*Family + Experience*Family + Experience*Education + Income*Family + Income*CCAvg + Income*Education + Family*CCAvg + Family*Education + Family*Mortgage + Family*SecuritiesAccount + Family*CDAccount + Family*Online + Family*CreditCard + CCAvg*Education + Online*CreditCard
+
+logit_3 <- glm(logit_3_formula, family=binomial(logit), data=modeling_df)
+summary(logit_3) # AIC: 527.28
+
+# Coefficients:
+#                             Estimate Std. Error z value Pr(>|z|)    
+# (Intercept)                -7.023528   7.116440  -0.987 0.323670    
+# Age                         0.168212   0.275515   0.611 0.541507    
+# Family                      0.980661   3.107779   0.316 0.752344    
+# Experience                 -0.144591   0.274847  -0.526 0.598834    
+# Income                     -0.050640   0.014413  -3.514 0.000442 ***
+# CCAvg                       1.782478   0.422886   4.215 2.50e-05 ***
+# Mortgage                   -0.006172   0.002783  -2.217 0.026592 *  
+# Education2                -11.146005   2.848493  -3.913 9.12e-05 ***
+# Education3                -12.115829   2.384314  -5.081 3.75e-07 ***
+# SecuritiesAccount1          0.807792   1.130094   0.715 0.474732    
+# CDAccount1                  3.595909   1.281135   2.807 0.005003 ** 
+# Online1                     0.129210   0.703257   0.184 0.854225    
+# CreditCard1                 0.375812   0.881514   0.426 0.669871    
+# Age:Family                 -0.213235   0.126640  -1.684 0.092222 .  
+# Family:Experience           0.199914   0.126792   1.577 0.114862    
+# Experience:Education2      -0.036310   0.029604  -1.227 0.220002    
+# Experience:Education3       0.052122   0.026453   1.970 0.048793 *  
+# Family:Income               0.055092   0.006877   8.011 1.13e-15 ***
+# Income:CCAvg               -0.016276   0.002817  -5.777 7.59e-09 ***
+# Income:Education2           0.144425   0.021531   6.708 1.97e-11 ***
+# Income:Education3           0.151274   0.018497   8.178 2.88e-16 ***
+# Family:CCAvg                0.245691   0.096237   2.553 0.010681 *  
+# Family:Education2          -1.722661   0.317023  -5.434 5.51e-08 ***
+# Family:Education3          -1.562737   0.317196  -4.927 8.36e-07 ***
+# Family:Mortgage             0.002552   0.001089   2.344 0.019091 *  
+# Family:SecuritiesAccount1  -1.303482   0.569163  -2.290 0.022011 *  
+# Family:CDAccount1           1.163137   0.561280   2.072 0.038238 *  
+# Family:Online1             -0.143144   0.271323  -0.528 0.597793    
+# Family:CreditCard1         -0.210741   0.333939  -0.631 0.527990    
+# CCAvg:Education2            1.433179   0.383270   3.739 0.000185 ***
+# CCAvg:Education3            0.597799   0.214131   2.792 0.005243 ** 
+# Online1:CreditCard1        -4.574446   0.873945  -5.234 1.66e-07 ***
+# 
+# AIC: 527.28
+
+```
+
+## Question 4
+### Neural net
+```{r}
+# Creating a separate df for the neural net since it can only handle numeric variables
+# -- Creating the new numeric columns
+nnet_modeling_df <- modeling_df
+nnet_modeling_df$Education2 <- ifelse(nnet_modeling_df$Education==2, 1, 0)
+nnet_modeling_df$Education3 <- ifelse(nnet_modeling_df$Education==3, 1, 0)
+nnet_modeling_df$Online1 <- ifelse(nnet_modeling_df$Online==1, 1, 0)
+nnet_modeling_df$SecuritiesAccount1 <- ifelse(nnet_modeling_df$SecuritiesAccount==1, 1, 0)
+nnet_modeling_df$CreditCard1 <- ifelse(nnet_modeling_df$CreditCard==1, 1, 0)
+nnet_modeling_df$CDAccount1 <- ifelse(nnet_modeling_df$CDAccount==1, 1, 0)
+
+# -- Dropping the old, non-numeric columns
+nnet_modeling_df$Education <- NULL
+nnet_modeling_df$Online <- NULL
+nnet_modeling_df$SecuritiesAccount <- NULL
+nnet_modeling_df$CreditCard <- NULL
+nnet_modeling_df$CDAccount <- NULL
+
+# creating a neural net on the variables found to be significant
+neuralnet_1 <- neuralnet(as.numeric(PersonalLoan) ~ Income + Family + CCAvg + Education2 + Education3 + SecuritiesAccount1 + CDAccount1 + Online1 + CreditCard1, data=nnet_modeling_df, hidden=3, lifesign="minimal", linear.output=F, threshold=0.1)
+plot(neuralnet_1)
+summary(neuralnet_1)
+
+neuralnet_1$result.matrix
+
+# error                                 240.03707369
+# reached.threshold                       0.03709310
+# steps                                  24.00000000
+# 
+# Coefficients:
+#   
+# Intercept.to.1layhid1                   0.28982565
+# Income.to.1layhid1                      0.10060752
+# Family.to.1layhid1                      0.34521253
+# CCAvg.to.1layhid1                      -1.32016072
+# Education2.to.1layhid1                  1.49218497
+# Education3.to.1layhid1                 -0.69100055
+# SecuritiesAccount1.to.1layhid1          0.04278126
+# CDAccount1.to.1layhid1                  0.39376627
+# Online1.to.1layhid1                    -1.06985280
+# CreditCard1.to.1layhid1                -2.25815677
+# Intercept.to.1layhid2                   1.13243899
+# Income.to.1layhid2                      3.37206128
+# Family.to.1layhid2                     -0.68920211
+# CCAvg.to.1layhid2                       1.90882303
+# Education2.to.1layhid2                  0.46636514
+# Education3.to.1layhid2                  2.80079609
+# SecuritiesAccount1.to.1layhid2          4.14374776
+# CDAccount1.to.1layhid2                  2.82333121
+# Online1.to.1layhid2                     1.99746142
+# CreditCard1.to.1layhid2                 2.13876091
+# Intercept.to.1layhid3                   2.06836751
+# Income.to.1layhid3                      2.59547032
+# Family.to.1layhid3                      1.61795072
+# CCAvg.to.1layhid3                       2.70774054
+# Education2.to.1layhid3                  0.99051742
+# Education3.to.1layhid3                  1.12901549
+# SecuritiesAccount1.to.1layhid3          2.34919436
+# CDAccount1.to.1layhid3                  3.17900041
+# Online1.to.1layhid3                     4.35076009
+# CreditCard1.to.1layhid3                 2.37050050
+# Intercept.to.as.numeric(PersonalLoan)   2.05657273
+# 1layhid1.to.as.numeric(PersonalLoan)    1.29002836
+# 1layhid2.to.as.numeric(PersonalLoan)    2.83298582
+# 1layhid3.to.as.numeric(PersonalLoan)    3.29719165
+
+```
+
+## Question 5
+### Neural net prediction
+```{r}
+# Creating a training and testing data set
+split_ratio <- 0.75
+set.seed(1234)
+split_sample <- sample.int(n=nrow(nnet_modeling_df), size=floor(split_ratio*nrow(nnet_modeling_df)), replace=F)
+trainData <- nnet_modeling_df[split_sample, ]
+testData <- nnet_modeling_df[-split_sample, ]
+
+# creating a neural net on the variables found to be significant
+neuralnet_2 <- neuralnet(as.numeric(PersonalLoan) ~ Income + Family + CCAvg + Education2 + Education3 + SecuritiesAccount1 + CDAccount1 + Online1 + CreditCard1, data=trainData, hidden=3, lifesign="minimal", linear.output=F, threshold=0.1)
+plot(neuralnet_2)
+summary(neuralnet_2)
+
+neuralnet_2$result.matrix
+
+# error                                 181.08855750
+# reached.threshold                       0.08861873
+# steps                                  20.00000000
+# 
+# Coefficients:
+#   
+# Intercept.to.1layhid1                   2.58601182
+# Income.to.1layhid1                      1.65562139
+# Family.to.1layhid1                      2.80090983
+# CCAvg.to.1layhid1                       0.69425979
+# Education2.to.1layhid1                  2.64839682
+# Education3.to.1layhid1                  2.32852977
+# SecuritiesAccount1.to.1layhid1          2.10344397
+# CDAccount1.to.1layhid1                  2.52980660
+# Online1.to.1layhid1                     1.01084869
+# CreditCard1.to.1layhid1                 1.40356185
+# Intercept.to.1layhid2                   1.57350530
+# Income.to.1layhid2                      2.42341890
+# Family.to.1layhid2                      1.39394797
+# CCAvg.to.1layhid2                       0.06272239
+# Education2.to.1layhid2                  2.95773844
+# Education3.to.1layhid2                  0.50928383
+# SecuritiesAccount1.to.1layhid2          3.02259944
+# CDAccount1.to.1layhid2                  1.91852106
+# Online1.to.1layhid2                     1.66486277
+# CreditCard1.to.1layhid2                 5.24856329
+# Intercept.to.1layhid3                   0.05737438
+# Income.to.1layhid3                     -0.03994058
+# Family.to.1layhid3                      0.17774070
+# CCAvg.to.1layhid3                      -1.72315353
+# Education2.to.1layhid3                 -0.17874035
+# Education3.to.1layhid3                  0.80095882
+# SecuritiesAccount1.to.1layhid3          1.13758196
+# CDAccount1.to.1layhid3                 -0.45393665
+# Online1.to.1layhid3                     1.88219145
+# CreditCard1.to.1layhid3                 0.77719064
+# Intercept.to.as.numeric(PersonalLoan)   3.11899359
+# 1layhid1.to.as.numeric(PersonalLoan)    2.66657825
+# 1layhid2.to.as.numeric(PersonalLoan)    2.52634424
+# 1layhid3.to.as.numeric(PersonalLoan)    1.26941414
+
+
+# Prediction
+testData$PersonalLoan_predicted_nnet2 <- ifelse(predict(neuralnet_2, testData, type=c("class")) > 0.5, 1, 0)
+
+neuralnet_2_accuracy <- sum(testData$PersonalLoan == testData$PersonalLoan_predicted_nnet2) / nrow(testData)
+neuralnet_2_accuracy # Accuracy of ~10%, terrible!
+
+neuralnet_2_confusion_matrix <- table(Actual=testData$PersonalLoan, Predicted=testData$PersonalLoan_predicted_nnet2)
+neuralnet_2_confusion_matrix
+
+```
